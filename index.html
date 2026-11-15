@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CN4C Tech Support - Repair request</title>
+  <meta name="description" content="Send a repair request to Cornwall Neighbourhoods for Change tech support.">
+  <meta name="theme-color" content="#0C0C0A">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="assets/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="icon" href="assets/icon-512.png" sizes="512x512" type="image/png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="fonts/ibm-plex-sans-regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="fonts/ibm-plex-sans-semibold.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script src="config.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to the form</a>
+
+  <svg class="svg-defs" aria-hidden="true" focusable="false" width="0" height="0">
+    <symbol id="icon-person" viewBox="0 0 24 24">
+      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+    </symbol>
+    <symbol id="icon-email" viewBox="0 0 24 24">
+      <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+    </symbol>
+    <symbol id="icon-phone" viewBox="0 0 24 24">
+      <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+    </symbol>
+    <symbol id="icon-devices" viewBox="0 0 24 24">
+      <path d="M3 6h18V4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4v-2H3V6zm10 6H9v1.78c-.61.55-1 1.33-1 2.22s.39 1.67 1 2.22V20h4v-1.78c.61-.55 1-1.34 1-2.22s-.39-1.67-1-2.22V12zm-2 5.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM22 8h-6c-.5 0-1 .5-1 1v10c0 .5.5 1 1 1h6c.5 0 1-.5 1-1V9c0-.5-.5-1-1-1zm-1 10h-4v-8h4v8z"/>
+    </symbol>
+    <symbol id="icon-alert" viewBox="0 0 24 24">
+      <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+    </symbol>
+  </svg>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="logo-plate">
+        <img src="assets/cn4c-logo.png" width="720" height="300" alt="Cornwall Neighbourhoods for Change">
+      </span>
+      <div class="topbar-text">
+        <p class="topbar-title">CN4C Tech Support</p>
+        <p class="topbar-subtitle">Repair intake</p>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="page">
+    <noscript>
+      <div class="alert" role="alert">
+        <p>This form needs JavaScript to send your request. Please enable it, or contact the repair desk directly.</p>
+      </div>
+    </noscript>
+
+    <div id="pending-banner" class="alert alert--info" role="status" hidden>
+      <svg class="alert-icon" aria-hidden="true" focusable="false"><use href="#icon-alert"/></svg>
+      <p id="pending-banner-text">A saved request is waiting to send.</p>
+      <button type="button" id="retry-pending" class="text-button">Try again now</button>
+    </div>
+
+    <section id="form-view" aria-labelledby="page-title">
+      <h1 id="page-title">New repair submission</h1>
+      <p class="lede">Device, fault and contact details. Email is required; phone is optional.</p>
+
+      <form id="repair-form" novalidate>
+        <div id="form-error" class="alert" role="alert" hidden>
+          <svg class="alert-icon" aria-hidden="true" focusable="false"><use href="#icon-alert"/></svg>
+          <p id="form-error-text"></p>
+        </div>
+
+        <section class="section" aria-labelledby="customer-label">
+          <h2 id="customer-label" class="section-label">Customer</h2>
+
+          <div class="field">
+            <label for="customer-name">Customer name <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-shell">
+              <svg class="field-icon" aria-hidden="true" focusable="false"><use href="#icon-person"/></svg>
+              <input id="customer-name" name="customerName" type="text" maxlength="200"
+                     autocomplete="name" required aria-required="true"
+                     aria-describedby="customer-name-error">
+            </div>
+            <p class="field-error" id="customer-name-error" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="customer-email">Customer email <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-shell">
+              <svg class="field-icon" aria-hidden="true" focusable="false"><use href="#icon-email"/></svg>
+              <input id="customer-email" name="customerEmail" type="email" inputmode="email"
+                     maxlength="200" autocomplete="email" placeholder="customer@example.com"
+                     required aria-required="true" aria-describedby="customer-email-error">
+            </div>
+            <p class="field-error" id="customer-email-error" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="contact-info">Phone number (optional)</label>
+            <div class="input-shell">
+              <svg class="field-icon" aria-hidden="true" focusable="false"><use href="#icon-phone"/></svg>
+              <input id="contact-info" name="contactInfo" type="tel" inputmode="tel"
+                     maxlength="40" autocomplete="tel" placeholder="07700 900123"
+                     aria-describedby="contact-info-hint">
+            </div>
+            <p class="field-hint" id="contact-info-hint">Optional - leave blank if the customer only uses email.</p>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="device-label">
+          <h2 id="device-label" class="section-label">Device</h2>
+
+          <fieldset class="field field--chips">
+            <legend class="sr-only">Device type</legend>
+            <div class="chip-group">
+              <label class="chip">
+                <input type="radio" name="deviceType" value="Phone" checked>
+                <span>Phone</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="deviceType" value="Laptop">
+                <span>Laptop</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="deviceType" value="Tablet">
+                <span>Tablet</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="deviceType" value="Console">
+                <span>Console</span>
+              </label>
+              <label class="chip">
+                <input type="radio" name="deviceType" value="Other">
+                <span>Other</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="field">
+            <label for="brand-model">Brand and model <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-shell">
+              <svg class="field-icon" aria-hidden="true" focusable="false"><use href="#icon-devices"/></svg>
+              <input id="brand-model" name="brandAndModel" type="text" maxlength="200"
+                     autocomplete="off" placeholder="e.g. MacBook Pro M2"
+                     required aria-required="true" aria-describedby="brand-model-error">
+            </div>
+            <p class="field-error" id="brand-model-error" hidden></p>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="fault-label">
+          <h2 id="fault-label" class="section-label">Fault</h2>
+
+          <div class="field">
+            <label for="issue-description">What is wrong? <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-shell input-shell--area">
+              <svg class="field-icon" aria-hidden="true" focusable="false"><use href="#icon-alert"/></svg>
+              <textarea id="issue-description" name="issueDescription" rows="5" maxlength="2000"
+                        autocomplete="off" required aria-required="true"
+                        placeholder="Describe the fault, any error messages, and what has already been tried."
+                        aria-describedby="issue-description-error issue-count"></textarea>
+            </div>
+            <div class="field-meta">
+              <p class="field-error" id="issue-description-error" hidden></p>
+              <p class="field-count" id="issue-count" aria-live="off">0 / 2000</p>
+            </div>
+          </div>
+
+          <fieldset class="field field--chips">
+            <legend class="section-label section-label--inline">Service priority</legend>
+            <div class="chip-group">
+              <label class="chip">
+                <input type="radio" name="servicePriority" value="Normal" checked>
+                <span>Normal</span>
+              </label>
+              <label class="chip chip--urgent">
+                <input type="radio" name="servicePriority" value="Urgent">
+                <span>Urgent</span>
+              </label>
+              <label class="chip chip--express">
+                <input type="radio" name="servicePriority" value="Express">
+                <span>Express</span>
+              </label>
+            </div>
+          </fieldset>
+        </section>
+
+        <div class="hp" aria-hidden="true">
+          <label for="company">Company</label>
+          <input id="company" name="company" type="text" tabindex="-1" autocomplete="off">
+        </div>
+
+        <button type="submit" id="submit-button" class="button">
+          <span class="spinner" id="submit-spinner" aria-hidden="true" hidden></span>
+          <span id="submit-label">Submit repair request</span>
+        </button>
+
+        <p class="form-note">We will email a confirmation and a ticket number. No marketing.</p>
+      </form>
+    </section>
+
+    <section id="success-panel" class="panel success" role="status" aria-live="polite" tabindex="-1" hidden>
+      <svg class="success-icon" aria-hidden="true" focusable="false"><use href="#icon-check"/></svg>
+      <h2 id="success-title">Request recorded</h2>
+      <p id="success-message">Your request is saved in the CN4C spreadsheet.</p>
+      <p class="ticket-line">Ticket <strong id="success-ticket" class="ticket"></strong></p>
+      <p id="success-email" class="success-email" hidden></p>
+      <button type="button" id="new-request" class="button button--secondary">New request</button>
+    </section>
+
+    <section class="privacy" aria-labelledby="privacy-label">
+      <h2 id="privacy-label" class="section-label">Privacy</h2>
+      <p>We use your name, email, optional phone number and repair details only to handle this request. They are stored in the charity's restricted Google Sheets workspace and are not published or sold.</p>
+      <p>You can ask us to delete your details at any time: <a id="privacy-email" href="mailto:business.hfoiyfuf@gmail.com">business.hfoiyfuf@gmail.com</a>.</p>
+    </section>
+
+    <footer class="footer">
+      <p>Cornwall Neighbourhoods for Change</p>
+      <p class="charity-no">Registered charity no. 1089721</p>
+      <p><a href="https://www.cn4c.org.uk">cn4c.org.uk</a></p>
+    </footer>
+  </main>
+
+  <script>
+    // ============================================================
+    // CN4C Tech Support — Direct POST to Apps Script /exec
+    // ============================================================
+    // This form posts JSON directly to the existing Google Apps Script webhook.
+    // The shared secret (cn4c-e6bcc72a1092dbe898c59395cc989d52) is baked into
+    // the payload and verified by the Apps Script doPost handler.  The secret
+    // never reaches the browser in a way that can be reused spamming the sheet.
+    //
+    // Data of record: Google Sheets (same as the Android app).
+    // Confirmation email: sent via MailApp from the same script.
+    // Admin gap: web submissions appear in the sheet, not the Android app's
+    //             local Room database.  Staff can view all rows (including web)
+    //             directly in the Google Sheet.
+    // ============================================================
+
+    document.getElementById('repair-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      // --- Hide success/pending states, show spinner ---
+      const successPanel = document.getElementById('success-panel');
+      const formView = document.getElementById('form-view');
+      const pendingBanner = document.getElementById('pending-banner');
+      const submitButton = document.getElementById('submit-button');
+      const submitSpinner = document.getElementById('submit-spinner');
+      const submitLabel = document.getElementById('submit-label');
+
+      // Reset previous error states
+      document.getElementById('form-error').hidden = true;
+      document.getElementById('form-error-text').textContent = '';
+
+      // Show pending banner (saved request waiting to send)
+      pendingBanner.hidden = false;
+      formView.hidden = true;
+      submitButton.hidden = true;
+      submitSpinner.hidden = false;
+      submitLabel.textContent = 'Sending...';
+
+      // --- Collect form data ---
+      const form = e.target;
+      const customerName = form.customerName.value.trim();
+      const customerEmail = form.customerEmail.value.trim();
+      const contactInfo = form.contactInfo.value.trim();
+      const deviceType = form.deviceType.value;
+      const brandAndModel = form.brandAndModel.value.trim();
+      const issueDescription = form.issueDescription.value.trim();
+      const servicePriority = form.servicePriority.value;
+
+      // --- Basic client-side validation (mirrors the Android app) ---
+      if (!customerName) {
+        document.getElementById('form-error').hidden = false;
+        document.getElementById('form-error-text').textContent = 'Please enter your customer name.';
+        resetForm(); return;
+      }
+      if (!customerEmail) {
+        document.getElementById('form-error').hidden = false;
+        document.getElementById('form-error-text').textContent = 'Please enter your customer email.';
+        resetForm(); return;
+      }
+      if (!/^[^@]+@[^@]+\.[^@]+$/.test(customerEmail)) {
+        document.getElementById('form-error').hidden = false;
+        document.getElementById('form-error-text').textContent = 'Please enter a valid customer email address.';
+        resetForm(); return;
+      }
+      if (!brandAndModel) {
+        document.getElementById('form-error').hidden = false;
+        document.getElementById('form-error-text').textContent = 'Please enter the brand and model of the device.';
+        resetForm(); return;
+      }
+      if (!issueDescription) {
+        document.getElementById('form-error').hidden = false;
+        document.getElementById('form-error-text').textContent = 'Please describe the fault.';
+        resetForm(); return;
+      }
+
+      // --- Build payload for /exec ---
+      const payload = {
+        id: 'WEB-' + Date.now(),                // Idempotency key (Android uses its own DB-assigned ID)
+        timestamp: Date.now(),
+        customerName: customerName,
+        customerEmail: customerEmail,
+        contactInfo: contactInfo,
+        deviceType: deviceType,
+        brandAndModel: brandAndModel,
+        issueDescription: issueDescription,
+        servicePriority: servicePriority,
+        secret: 'cn4c-e6bcc72a1092dbe898c59395cc989d52',  // <-- Must match SecureStorageManager.kt
+        source: 'Web',
+        sendEmailConfirmation: true
+      };
+
+      // --- Submit directly to Apps Script /exec ---
+      const execUrl = 'https://script.google.com/macros/s/AKfycby9rK5_FQE7c_-7tDhR04dD9tkLikNeOzbu5N0AipBT4GJTtvZ4BuEMU01jSfeTVYh4/exec';
+
+      try {
+        const response = await fetch(execUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          // --- Show success panel ---
+          successPanel.hidden = false;
+          formView.hidden = true;
+          document.getElementById('success-ticket').textContent = result.id;
+          document.getElementById('success-email').textContent = customerEmail;
+          document.getElementById('success-email').removeAttribute('hidden');
+
+          // Reset form after delay
+          setTimeout(() => {
+            form.reset();
+            pendingBanner.hidden = true;
+            formView.hidden = false;
+            submitButton.hidden = false;
+            submitSpinner.hidden = true;
+            submitLabel.textContent = 'Submit repair request';
+          }, 5000);
+        } else {
+          // --- Show submission error ---
+          document.getElementById('form-error').hidden = false;
+          document.getElementById('form-error-text').textContent = 'Submission failed: ' + (result.message || 'unknown error');
+          pendingBanner.hidden = true;
+          formView.hidden = false;
+          submitButton.hidden = false;
+          submitSpinner.hidden = true;
+          submitLabel.textContent = 'Submit repair request';
+        }
+      } catch (err) {
+        console.error('Submit error:', err);
+        document.getElementById('form-error').hidden = false;
+        document.getElementById('form-error-text').textContent = 'Network error. Please check your connection and try again.';
+        pendingBanner.hidden = true;
+        formView.hidden = false;
+        submitButton.hidden = false;
+        submitSpinner.hidden = true;
+        submitLabel.textContent = 'Submit repair request';
+      }
+    });
+
+    // --- Reset form after success ---
+    function resetForm() {
+      const form = document.getElementById('repair-form');
+      const successPanel = document.getElementById('success-panel');
+      const formView = document.getElementById('form-view');
+      const pendingBanner = document.getElementById('pending-banner');
+      const submitButton = document.getElementById('submit-button');
+      const submitSpinner = document.getElementById('submit-spinner');
+      const submitLabel = document.getElementById('submit-label');
+
+      form.reset();
+      pendingBanner.hidden = true;
+      formView.hidden = false;
+      submitButton.hidden = false;
+      submitSpinner.hidden = true;
+      submitLabel.textContent = 'Submit repair request';
+      successPanel.hidden = true;
+    }
+  </script>
+</body>
+</html>

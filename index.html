@@ -66,7 +66,7 @@
 
     <section id="form-view" aria-labelledby="page-title">
       <h1 id="page-title">New repair submission</h1>
-      <p class="lede">Device, fault and contact details. Email is required; phone is optional.</p>
+      <p class="lede">Hi it's shauns site wowow, please fill in form below and i shall get back to you ASAP!</p>
 
       <form id="repair-form" novalidate>
         <div id="form-error" class="alert" role="alert" hidden>
@@ -107,7 +107,7 @@
                      maxlength="40" autocomplete="tel" placeholder="07700 900123"
                      aria-describedby="contact-info-hint">
             </div>
-            <p class="field-hint" id="contact-info-hint">Optional - leave blank if the customer only uses email.</p>
+            <p class="field-hint" id="contact-info-hint">Optional — leave blank if you prefer email.</p>
           </div>
         </section>
 
@@ -276,17 +276,17 @@
       // --- Basic client-side validation (mirrors the Android app) ---
       if (!customerName) {
         document.getElementById('form-error').hidden = false;
-        document.getElementById('form-error-text').textContent = 'Please enter your customer name.';
+        document.getElementById('form-error-text').textContent = 'Please enter your name.';
         resetForm(); return;
       }
       if (!customerEmail) {
         document.getElementById('form-error').hidden = false;
-        document.getElementById('form-error-text').textContent = 'Please enter your customer email.';
+        document.getElementById('form-error-text').textContent = 'Please enter your email address.';
         resetForm(); return;
       }
       if (!/^[^@]+@[^@]+\.[^@]+$/.test(customerEmail)) {
         document.getElementById('form-error').hidden = false;
-        document.getElementById('form-error-text').textContent = 'Please enter a valid customer email address.';
+        document.getElementById('form-error-text').textContent = 'Please enter a valid email address.';
         resetForm(); return;
       }
       if (!brandAndModel) {

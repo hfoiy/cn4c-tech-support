@@ -316,13 +316,13 @@
         sendEmailConfirmation: true
       };
 
-      // --- Submit directly to Apps Script /exec ---
       const execUrl = 'https://script.google.com/macros/s/AKfycby9rK5_FQE7c_-7tDhR04dD9tkLikNeOzbu5N0AipBT4GJTtvZ4BuEMU01jSfeTVYh4/exec';
 
       try {
+        // Use text/plain to avoid CORS preflight (OPTIONS) which Apps Script does not support
         const response = await fetch(execUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 

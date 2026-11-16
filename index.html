@@ -267,6 +267,7 @@
       <p id="success-message">Your request is saved in the CN4C spreadsheet.</p>
       <p class="ticket-line">Ticket <strong id="success-ticket" class="ticket"></strong></p>
       <p id="success-email" class="success-email" hidden></p>
+      <p id="success-photo-warning" class="field-hint" hidden>Your request was saved, but the photo could not be attached. Please show it to the repair desk.</p>
       <button type="button" id="new-request" class="button button--secondary">New request</button>
     </section>
 
@@ -318,6 +319,7 @@
     const photoNameEl = document.getElementById('photo-name');
     const photoSizeEl = document.getElementById('photo-size');
     const photoError = document.getElementById('photo-error');
+    const photoWarning = document.getElementById('success-photo-warning');
 
     const issueDescriptionInput = document.getElementById('issue-description');
     const issueCount = document.getElementById('issue-count');
@@ -594,6 +596,9 @@
           document.getElementById('success-ticket').textContent = result.id;
           document.getElementById('success-email').textContent = customerEmail;
           document.getElementById('success-email').removeAttribute('hidden');
+          // Old script versions do not know about photos. Be honest rather than
+          // letting the customer assume the image was attached.
+          photoWarning.hidden = !(photoDataUrl && result.photoSaved !== true);
           successPanel.focus();
 
           // Reset form after a short pause so the ticket can be read.
@@ -614,6 +619,7 @@
       updateIssueCount();
       restoreForm();
       successPanel.hidden = true;
+      photoWarning.hidden = true;
       formError.hidden = true;
       formErrorText.textContent = '';
     }

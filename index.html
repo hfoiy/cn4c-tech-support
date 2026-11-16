@@ -37,6 +37,9 @@
     <symbol id="icon-check" viewBox="0 0 24 24">
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
     </symbol>
+    <symbol id="icon-image" viewBox="0 0 24 24">
+      <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+    </symbol>
   </svg>
 
   <header class="topbar">
@@ -155,13 +158,48 @@
         <section class="section" aria-labelledby="fault-label">
           <h2 id="fault-label" class="section-label">Fault</h2>
 
+          <fieldset class="field field--chips field--tried" aria-describedby="tried-hint">
+            <legend class="section-label section-label--inline">What have you tried?</legend>
+            <p class="field-hint field-hint--above" id="tried-hint">Tick anything that applies. It helps us avoid suggesting something you have already done.</p>
+            <div class="chip-group">
+              <label class="chip">
+                <input type="checkbox" name="tried" value="Turned it off and on again">
+                <span>Turned it off and on again</span>
+              </label>
+              <label class="chip">
+                <input type="checkbox" name="tried" value="Checked the Wi-Fi / internet connection">
+                <span>Checked Wi-Fi / internet</span>
+              </label>
+              <label class="chip">
+                <input type="checkbox" name="tried" value="Cleared the cache or browser data">
+                <span>Cleared cache or browser data</span>
+              </label>
+              <label class="chip">
+                <input type="checkbox" name="tried" value="Updated the device or app">
+                <span>Updated the device or app</span>
+              </label>
+              <label class="chip">
+                <input type="checkbox" name="tried" value="Signed out and back in">
+                <span>Signed out and back in</span>
+              </label>
+              <label class="chip">
+                <input type="checkbox" name="tried" value="Tried a different charger or cable">
+                <span>Tried another charger or cable</span>
+              </label>
+              <label class="chip">
+                <input type="checkbox" name="tried" value="Nothing yet / not sure" data-none="true">
+                <span>Nothing yet / not sure</span>
+              </label>
+            </div>
+          </fieldset>
+
           <div class="field">
-            <label for="issue-description">What is wrong? <span class="req" aria-hidden="true">*</span></label>
+            <label for="issue-description">Describe the issue further <span class="req" aria-hidden="true">*</span></label>
             <div class="input-shell input-shell--area">
               <svg class="field-icon" aria-hidden="true" focusable="false"><use href="#icon-alert"/></svg>
               <textarea id="issue-description" name="issueDescription" rows="5" maxlength="2000"
                         autocomplete="off" required aria-required="true"
-                        placeholder="Describe the fault, any error messages, and what has already been tried."
+                        placeholder="Tell us what happens, any error messages, and when it started."
                         aria-describedby="issue-description-error issue-count"></textarea>
             </div>
             <div class="field-meta">
@@ -170,7 +208,27 @@
             </div>
           </div>
 
-          <fieldset class="field field--chips">
+          <div class="field field--file">
+            <label for="photo">Add a photo (optional)</label>
+            <input id="photo" name="photo" type="file" accept="image/*" class="sr-only"
+                   aria-describedby="photo-hint">
+            <label for="photo" class="file-picker">
+              <svg aria-hidden="true" focusable="false"><use href="#icon-image"/></svg>
+              <span>Choose a photo</span>
+            </label>
+            <p class="field-hint" id="photo-hint">A photo of the screen or device helps us diagnose it. It is resized automatically before sending.</p>
+            <div class="photo-preview" id="photo-preview" hidden>
+              <img id="photo-thumb" class="photo-thumb" alt="">
+              <div class="photo-meta">
+                <p class="photo-name" id="photo-name"></p>
+                <p class="photo-size" id="photo-size"></p>
+              </div>
+              <button type="button" id="photo-remove" class="text-button">Remove</button>
+            </div>
+            <p class="field-error" id="photo-error" role="alert" hidden></p>
+          </div>
+
+          <fieldset class="field field--chips field--priority">
             <legend class="section-label section-label--inline">Service priority</legend>
             <div class="chip-group">
               <label class="chip">
@@ -214,7 +272,7 @@
 
     <section class="privacy" aria-labelledby="privacy-label">
       <h2 id="privacy-label" class="section-label">Privacy</h2>
-      <p>We use your name, email, optional phone number and repair details only to handle this request. They are stored in the charity's restricted Google Sheets workspace and are not published or sold.</p>
+      <p>We use your name, email, optional phone number, repair details and any photo you attach only to handle this request. They are stored in the charity's restricted Google Sheets workspace and restricted Google Drive, and are not published or sold.</p>
       <p>You can ask us to delete your details at any time: <a id="privacy-email" href="mailto:business.hfoiyfuf@gmail.com">business.hfoiyfuf@gmail.com</a>.</p>
     </section>
 
@@ -230,75 +288,268 @@
     // CN4C Tech Support — Direct POST to Apps Script /exec
     // ============================================================
     // This form posts JSON directly to the existing Google Apps Script webhook.
-    // The shared secret (cn4c-e6bcc72a1092dbe898c59395cc989d52) is baked into
-    // the payload and verified by the Apps Script doPost handler.  The secret
-    // never reaches the browser in a way that can be reused spamming the sheet.
+    // The shared secret is baked into the payload and verified by the Apps
+    // Script doPost handler. It is obfuscation, not real authentication: anyone
+    // who reads the page source can extract it.
     //
     // Data of record: Google Sheets (same as the Android app).
     // Confirmation email: sent via MailApp from the same script.
+    // Photos: saved to a restricted Google Drive folder; the link is written to
+    //         the sheet only, never shown to the customer.
     // Admin gap: web submissions appear in the sheet, not the Android app's
-    //             local Room database.  Staff can view all rows (including web)
+    //             local Room database. Staff can view all rows (including web)
     //             directly in the Google Sheet.
     // ============================================================
 
-    document.getElementById('repair-form').addEventListener('submit', async function(e) {
+    const repairForm = document.getElementById('repair-form');
+    const pendingBanner = document.getElementById('pending-banner');
+    const pendingBannerText = document.getElementById('pending-banner-text');
+    const formView = document.getElementById('form-view');
+    const successPanel = document.getElementById('success-panel');
+    const submitButton = document.getElementById('submit-button');
+    const submitSpinner = document.getElementById('submit-spinner');
+    const submitLabel = document.getElementById('submit-label');
+    const formError = document.getElementById('form-error');
+    const formErrorText = document.getElementById('form-error-text');
+
+    const photoInput = document.getElementById('photo');
+    const photoPreview = document.getElementById('photo-preview');
+    const photoThumb = document.getElementById('photo-thumb');
+    const photoNameEl = document.getElementById('photo-name');
+    const photoSizeEl = document.getElementById('photo-size');
+    const photoError = document.getElementById('photo-error');
+
+    const issueDescriptionInput = document.getElementById('issue-description');
+    const issueCount = document.getElementById('issue-count');
+
+    let photoDataUrl = '';
+    let photoName = '';
+    let photoType = '';
+    let photoProcessing = false;
+
+    // --- Issue character counter -------------------------------------------
+    function updateIssueCount() {
+      issueCount.textContent = issueDescriptionInput.value.length + ' / 2000';
+    }
+    issueDescriptionInput.addEventListener('input', updateIssueCount);
+    updateIssueCount();
+
+    // --- "Nothing yet / not sure" is exclusive ------------------------------
+    const triedInputs = Array.from(document.querySelectorAll('input[name="tried"]'));
+    const triedNone = triedInputs.find(function (input) {
+      return input.dataset.none === 'true';
+    });
+    triedInputs.forEach(function (input) {
+      input.addEventListener('change', function () {
+        if (!input.checked || !triedNone) return;
+        if (input === triedNone) {
+          triedInputs.forEach(function (other) {
+            if (other !== triedNone) other.checked = false;
+          });
+        } else {
+          triedNone.checked = false;
+        }
+      });
+    });
+
+    // --- Photo handling -----------------------------------------------------
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function readFileAsDataUrl(file) {
+      return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function () { resolve(reader.result); };
+        reader.onerror = function () { reject(reader.error || new Error('Could not read that file.')); };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function loadImage(source) {
+      return new Promise(function (resolve, reject) {
+        const image = new Image();
+        image.onload = function () { resolve(image); };
+        image.onerror = function () { reject(new Error('Could not open that image.')); };
+        image.src = source;
+      });
+    }
+
+    function showPhotoError(message) {
+      photoError.textContent = message;
+      photoError.hidden = false;
+    }
+
+    function clearPhoto() {
+      photoDataUrl = '';
+      photoName = '';
+      photoType = '';
+      photoProcessing = false;
+      photoInput.value = '';
+      photoThumb.removeAttribute('src');
+      photoThumb.alt = '';
+      photoNameEl.textContent = '';
+      photoSizeEl.textContent = '';
+      photoPreview.hidden = true;
+      photoError.hidden = true;
+      photoError.textContent = '';
+    }
+
+    async function preparePhoto(file) {
+      if (!file.type || file.type.indexOf('image/') !== 0) {
+        throw new Error('Please choose an image file (JPG, PNG or similar).');
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        throw new Error('That photo is too large. Please choose one under 20 MB.');
+      }
+
+      const originalDataUrl = await readFileAsDataUrl(file);
+      let outputDataUrl = originalDataUrl;
+      let outputType = file.type;
+      let outputName = file.name;
+
+      try {
+        const image = await loadImage(originalDataUrl);
+        const maxSide = 1600;
+        const largestSide = Math.max(image.naturalWidth, image.naturalHeight);
+        const scale = largestSide > maxSide ? maxSide / largestSide : 1;
+        const width = Math.max(1, Math.round(image.naturalWidth * scale));
+        const height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Could not process that photo.');
+        context.drawImage(image, 0, 0, width, height);
+        outputDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        outputType = 'image/jpeg';
+        outputName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+      } catch (error) {
+        // Some phone formats (e.g. HEIC) cannot be drawn in every browser.
+        // Keep the original only when it is small enough to upload safely.
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error('We could not process that photo. Please try a JPG or PNG under 5 MB.');
+        }
+      }
+
+      const base64 = outputDataUrl.split(',')[1] || '';
+      const decodedBytes = Math.round(base64.length * 0.75);
+      if (decodedBytes > 4 * 1024 * 1024) {
+        throw new Error('That photo is still too large after resizing. Please try a smaller one.');
+      }
+
+      return { dataUrl: outputDataUrl, name: outputName, type: outputType, bytes: decodedBytes };
+    }
+
+    photoInput.addEventListener('change', async function () {
+      const file = photoInput.files && photoInput.files[0];
+      photoError.hidden = true;
+      if (!file) {
+        clearPhoto();
+        return;
+      }
+
+      photoProcessing = true;
+      submitButton.disabled = true;
+      submitLabel.textContent = 'Preparing photo...';
+
+      try {
+        const prepared = await preparePhoto(file);
+        photoDataUrl = prepared.dataUrl;
+        photoName = prepared.name;
+        photoType = prepared.type;
+        photoThumb.src = prepared.dataUrl;
+        photoThumb.alt = 'Preview of ' + prepared.name;
+        photoNameEl.textContent = prepared.name;
+        photoSizeEl.textContent = formatBytes(prepared.bytes) + ' · resized for upload';
+        photoPreview.hidden = false;
+      } catch (error) {
+        clearPhoto();
+        showPhotoError(error.message || 'Could not read that photo. Please try another image.');
+      } finally {
+        photoProcessing = false;
+        submitButton.disabled = false;
+        submitLabel.textContent = 'Submit repair request';
+      }
+    });
+
+    document.getElementById('photo-remove').addEventListener('click', function () {
+      clearPhoto();
+      photoInput.focus();
+    });
+
+    document.getElementById('new-request').addEventListener('click', resetForm);
+
+    // --- Submit -------------------------------------------------------------
+    function restoreForm() {
+      pendingBanner.hidden = true;
+      pendingBannerText.textContent = 'A saved request is waiting to send.';
+      formView.hidden = false;
+      submitButton.hidden = false;
+      submitSpinner.hidden = true;
+      submitLabel.textContent = 'Submit repair request';
+    }
+
+    function showError(message) {
+      restoreForm();
+      formError.hidden = false;
+      formErrorText.textContent = message;
+    }
+
+    repairForm.addEventListener('submit', async function (e) {
       e.preventDefault();
 
-      // --- Hide success/pending states, show spinner ---
-      const successPanel = document.getElementById('success-panel');
-      const formView = document.getElementById('form-view');
-      const pendingBanner = document.getElementById('pending-banner');
-      const submitButton = document.getElementById('submit-button');
-      const submitSpinner = document.getElementById('submit-spinner');
-      const submitLabel = document.getElementById('submit-label');
+      formError.hidden = true;
+      formErrorText.textContent = '';
 
-      // Reset previous error states
-      document.getElementById('form-error').hidden = true;
-      document.getElementById('form-error-text').textContent = '';
+      // --- Collect form data ---
+      const customerName = repairForm.customerName.value.trim();
+      const customerEmail = repairForm.customerEmail.value.trim();
+      const contactInfo = repairForm.contactInfo.value.trim();
+      const deviceType = repairForm.deviceType.value;
+      const brandAndModel = repairForm.brandAndModel.value.trim();
+      const issueDescription = repairForm.issueDescription.value.trim();
+      const servicePriority = repairForm.servicePriority.value;
+      const tried = Array.from(repairForm.querySelectorAll('input[name="tried"]:checked')).map(function (input) {
+        return input.value;
+      });
 
-      // Show pending banner (saved request waiting to send)
+      // --- Basic client-side validation (mirrors the Android app) ---
+      if (!customerName) {
+        showError('Please enter your name.');
+        return;
+      }
+      if (!customerEmail) {
+        showError('Please enter your email address.');
+        return;
+      }
+      if (!/^[^@]+@[^@]+\.[^@]+$/.test(customerEmail)) {
+        showError('Please enter a valid email address.');
+        return;
+      }
+      if (!brandAndModel) {
+        showError('Please enter the brand and model of the device.');
+        return;
+      }
+      if (!issueDescription) {
+        showError('Please describe the issue.');
+        return;
+      }
+      if (photoProcessing) {
+        showError('Please wait for the photo to finish processing.');
+        return;
+      }
+
+      // --- Sending state ---
       pendingBanner.hidden = false;
+      pendingBannerText.textContent = 'Sending your request...';
       formView.hidden = true;
       submitButton.hidden = true;
       submitSpinner.hidden = false;
       submitLabel.textContent = 'Sending...';
-
-      // --- Collect form data ---
-      const form = e.target;
-      const customerName = form.customerName.value.trim();
-      const customerEmail = form.customerEmail.value.trim();
-      const contactInfo = form.contactInfo.value.trim();
-      const deviceType = form.deviceType.value;
-      const brandAndModel = form.brandAndModel.value.trim();
-      const issueDescription = form.issueDescription.value.trim();
-      const servicePriority = form.servicePriority.value;
-
-      // --- Basic client-side validation (mirrors the Android app) ---
-      if (!customerName) {
-        document.getElementById('form-error').hidden = false;
-        document.getElementById('form-error-text').textContent = 'Please enter your name.';
-        resetForm(); return;
-      }
-      if (!customerEmail) {
-        document.getElementById('form-error').hidden = false;
-        document.getElementById('form-error-text').textContent = 'Please enter your email address.';
-        resetForm(); return;
-      }
-      if (!/^[^@]+@[^@]+\.[^@]+$/.test(customerEmail)) {
-        document.getElementById('form-error').hidden = false;
-        document.getElementById('form-error-text').textContent = 'Please enter a valid email address.';
-        resetForm(); return;
-      }
-      if (!brandAndModel) {
-        document.getElementById('form-error').hidden = false;
-        document.getElementById('form-error-text').textContent = 'Please enter the brand and model of the device.';
-        resetForm(); return;
-      }
-      if (!issueDescription) {
-        document.getElementById('form-error').hidden = false;
-        document.getElementById('form-error-text').textContent = 'Please describe the fault.';
-        resetForm(); return;
-      }
 
       // --- Build payload for /exec ---
       const payload = {
@@ -311,10 +562,17 @@
         brandAndModel: brandAndModel,
         issueDescription: issueDescription,
         servicePriority: servicePriority,
+        tried: tried,
         secret: 'cn4c-e6bcc72a1092dbe898c59395cc989d52',  // <-- Must match SecureStorageManager.kt
         source: 'Web',
         sendEmailConfirmation: true
       };
+
+      if (photoDataUrl) {
+        payload.imageData = photoDataUrl;
+        payload.imageName = photoName;
+        payload.imageType = photoType;
+      }
 
       const execUrl = 'https://script.google.com/macros/s/AKfycby9rK5_FQE7c_-7tDhR04dD9tkLikNeOzbu5N0AipBT4GJTtvZ4BuEMU01jSfeTVYh4/exec';
 
@@ -330,60 +588,34 @@
 
         if (result.status === 'success') {
           // --- Show success panel ---
+          pendingBanner.hidden = true;
           successPanel.hidden = false;
           formView.hidden = true;
           document.getElementById('success-ticket').textContent = result.id;
           document.getElementById('success-email').textContent = customerEmail;
           document.getElementById('success-email').removeAttribute('hidden');
+          successPanel.focus();
 
-          // Reset form after delay
-          setTimeout(() => {
-            form.reset();
-            pendingBanner.hidden = true;
-            formView.hidden = false;
-            submitButton.hidden = false;
-            submitSpinner.hidden = true;
-            submitLabel.textContent = 'Submit repair request';
-          }, 5000);
+          // Reset form after a short pause so the ticket can be read.
+          setTimeout(resetForm, 5000);
         } else {
-          // --- Show submission error ---
-          document.getElementById('form-error').hidden = false;
-          document.getElementById('form-error-text').textContent = 'Submission failed: ' + (result.message || 'unknown error');
-          pendingBanner.hidden = true;
-          formView.hidden = false;
-          submitButton.hidden = false;
-          submitSpinner.hidden = true;
-          submitLabel.textContent = 'Submit repair request';
+          showError('Submission failed: ' + (result.message || 'unknown error'));
         }
       } catch (err) {
         console.error('Submit error:', err);
-        document.getElementById('form-error').hidden = false;
-        document.getElementById('form-error-text').textContent = 'Network error. Please check your connection and try again.';
-        pendingBanner.hidden = true;
-        formView.hidden = false;
-        submitButton.hidden = false;
-        submitSpinner.hidden = true;
-        submitLabel.textContent = 'Submit repair request';
+        showError('Network error. Please check your connection and try again.');
       }
     });
 
-    // --- Reset form after success ---
+    // --- Reset form (after success or a validation error) ---
     function resetForm() {
-      const form = document.getElementById('repair-form');
-      const successPanel = document.getElementById('success-panel');
-      const formView = document.getElementById('form-view');
-      const pendingBanner = document.getElementById('pending-banner');
-      const submitButton = document.getElementById('submit-button');
-      const submitSpinner = document.getElementById('submit-spinner');
-      const submitLabel = document.getElementById('submit-label');
-
-      form.reset();
-      pendingBanner.hidden = true;
-      formView.hidden = false;
-      submitButton.hidden = false;
-      submitSpinner.hidden = true;
-      submitLabel.textContent = 'Submit repair request';
+      repairForm.reset();
+      clearPhoto();
+      updateIssueCount();
+      restoreForm();
       successPanel.hidden = true;
+      formError.hidden = true;
+      formErrorText.textContent = '';
     }
   </script>
 </body>

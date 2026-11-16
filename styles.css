@@ -261,7 +261,8 @@ form {
 }
 
 .field label,
-.field legend {
+.field legend,
+.field > .field-label {
   display: block;
   margin: 0 0 6px;
   padding: 0;

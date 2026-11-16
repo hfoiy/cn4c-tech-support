@@ -63,8 +63,7 @@
 
     <div id="pending-banner" class="alert alert--info" role="status" hidden>
       <svg class="alert-icon" aria-hidden="true" focusable="false"><use href="#icon-alert"/></svg>
-      <p id="pending-banner-text">A saved request is waiting to send.</p>
-      <button type="button" id="retry-pending" class="text-button">Try again now</button>
+      <p id="pending-banner-text">Sending your request…</p>
     </div>
 
     <section id="form-view" aria-labelledby="page-title">
@@ -72,7 +71,7 @@
       <p class="lede">Hi it's shauns site wowow, please fill in form below and i shall get back to you ASAP!</p>
 
       <form id="repair-form" novalidate>
-        <div id="form-error" class="alert" role="alert" hidden>
+        <div id="form-error" class="alert" role="alert" tabindex="-1" hidden>
           <svg class="alert-icon" aria-hidden="true" focusable="false"><use href="#icon-alert"/></svg>
           <p id="form-error-text"></p>
         </div>
@@ -209,9 +208,9 @@
           </div>
 
           <div class="field field--file">
-            <label for="photo">Add a photo (optional)</label>
+            <span class="field-label" id="photo-label">Add a photo (optional)</span>
             <input id="photo" name="photo" type="file" accept="image/*" class="sr-only"
-                   aria-describedby="photo-hint">
+                   aria-labelledby="photo-label" aria-describedby="photo-hint">
             <label for="photo" class="file-picker">
               <svg aria-hidden="true" focusable="false"><use href="#icon-image"/></svg>
               <span>Choose a photo</span>
@@ -328,6 +327,8 @@
     let photoName = '';
     let photoType = '';
     let photoProcessing = false;
+    let photoRequestId = 0;
+    let resetTimer = null;
 
     // --- Issue character counter -------------------------------------------
     function updateIssueCount() {
@@ -431,6 +432,10 @@
         outputName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
       } catch (error) {
         // Some phone formats (e.g. HEIC) cannot be drawn in every browser.
+        // Sending the original would leave staff with a file they cannot open.
+        if (/^image\/(heic|heif)$/i.test(file.type)) {
+          throw new Error('That photo is a HEIC file, which staff cannot open. Please choose a JPG or PNG.');
+        }
         // Keep the original only when it is small enough to upload safely.
         if (file.size > 5 * 1024 * 1024) {
           throw new Error('We could not process that photo. Please try a JPG or PNG under 5 MB.');
@@ -448,9 +453,10 @@
 
     photoInput.addEventListener('change', async function () {
       const file = photoInput.files && photoInput.files[0];
+      const myRequest = ++photoRequestId;
       photoError.hidden = true;
       if (!file) {
-        clearPhoto();
+        if (myRequest === photoRequestId) clearPhoto();
         return;
       }
 
@@ -460,21 +466,27 @@
 
       try {
         const prepared = await preparePhoto(file);
+        // A newer selection started while this one was decoding; ignore it.
+        if (myRequest !== photoRequestId) return;
         photoDataUrl = prepared.dataUrl;
         photoName = prepared.name;
         photoType = prepared.type;
         photoThumb.src = prepared.dataUrl;
         photoThumb.alt = 'Preview of ' + prepared.name;
         photoNameEl.textContent = prepared.name;
-        photoSizeEl.textContent = formatBytes(prepared.bytes) + ' · resized for upload';
+        photoSizeEl.textContent = formatBytes(prepared.bytes) +
+          (prepared.type === 'image/jpeg' ? ' · resized for upload' : ' · original size');
         photoPreview.hidden = false;
       } catch (error) {
+        if (myRequest !== photoRequestId) return;
         clearPhoto();
         showPhotoError(error.message || 'Could not read that photo. Please try another image.');
       } finally {
-        photoProcessing = false;
-        submitButton.disabled = false;
-        submitLabel.textContent = 'Submit repair request';
+        if (myRequest === photoRequestId) {
+          photoProcessing = false;
+          submitButton.disabled = false;
+          submitLabel.textContent = 'Submit repair request';
+        }
       }
     });
 
@@ -488,7 +500,7 @@
     // --- Submit -------------------------------------------------------------
     function restoreForm() {
       pendingBanner.hidden = true;
-      pendingBannerText.textContent = 'A saved request is waiting to send.';
+      pendingBannerText.textContent = 'Sending your request…';
       formView.hidden = false;
       submitButton.hidden = false;
       submitSpinner.hidden = true;
@@ -499,10 +511,18 @@
       restoreForm();
       formError.hidden = false;
       formErrorText.textContent = message;
+      // On a phone the banner is far above the submit button, so move focus
+      // there or the tap looks like it did nothing.
+      formError.focus();
     }
 
     repairForm.addEventListener('submit', async function (e) {
       e.preventDefault();
+
+      if (resetTimer !== null) {
+        clearTimeout(resetTimer);
+        resetTimer = null;
+      }
 
       formError.hidden = true;
       formErrorText.textContent = '';
@@ -578,12 +598,17 @@
 
       const execUrl = 'https://script.google.com/macros/s/AKfycby9rK5_FQE7c_-7tDhR04dD9tkLikNeOzbu5N0AipBT4GJTtvZ4BuEMU01jSfeTVYh4/exec';
 
+      // A slow Apps Script run must not leave the form hidden forever.
+      const abortController = new AbortController();
+      const abortTimer = setTimeout(function () { abortController.abort(); }, 45000);
+
       try {
         // Use text/plain to avoid CORS preflight (OPTIONS) which Apps Script does not support
         const response = await fetch(execUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: abortController.signal
         });
 
         const result = await response.json();
@@ -601,19 +626,30 @@
           photoWarning.hidden = !(photoDataUrl && result.photoSaved !== true);
           successPanel.focus();
 
-          // Reset form after a short pause so the ticket can be read.
-          setTimeout(resetForm, 5000);
+          // Let the ticket be read. 15s is long enough for the photo warning to
+          // register; the timer is cancelled if the customer starts again.
+          resetTimer = setTimeout(resetForm, 15000);
         } else {
           showError('Submission failed: ' + (result.message || 'unknown error'));
         }
       } catch (err) {
         console.error('Submit error:', err);
-        showError('Network error. Please check your connection and try again.');
+        if (err && err.name === 'AbortError') {
+          showError('That took too long. Your request may already have reached us — check your email before sending it again.');
+        } else {
+          showError('Could not reach the repair desk. That may just be the connection dropping after your request was saved, so check your email before sending it again.');
+        }
+      } finally {
+        clearTimeout(abortTimer);
       }
     });
 
     // --- Reset form (after success or a validation error) ---
     function resetForm() {
+      if (resetTimer !== null) {
+        clearTimeout(resetTimer);
+        resetTimer = null;
+      }
       repairForm.reset();
       clearPhoto();
       updateIssueCount();
